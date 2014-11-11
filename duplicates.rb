@@ -3,32 +3,36 @@
 require 'digest/md5'
 require 'exifr'
 require 'fileutils'
+require 'logger'
 
-$stdout = File.new('log.txt', 'w')
+imagesDir = "images"
+imagesToCheck = "check"
+duplicates = "duplicates"
 
-imagesDir = "images/"
-imagesToCheck = "check/"
-duplicates = "duplicates/"
+currentDateTime = Time.now.strftime("%Y%m%d-%H%M")
 
-images = Array.new
+
+logger = Logger.new 'output_' + currentDateTime + '.log'
+images = []
 
 # load contents of imagesDir into an array 
-Dir.glob(imagesDir + "**/*.jpg") do |my_image_file|
-  puts "adding #{my_image_file} to the array"
+Dir.glob(imagesDir + "/**/*.jpg") do |my_image_file|
+  logger.info "adding #{my_image_file} to the array"
   hash = Digest::MD5.file my_image_file
-  images.push(hash)
+  images << hash
 end
 
 # loop through images in imagesToCheck and check if they already exist
-Dir.glob(imagesToCheck + "**/*.jpg") do |my_image_file|
-  puts "checking if #{my_image_file} already exists"
+Dir.glob(imagesToCheck + "/**/*.jpg") do |my_image_file|
+  logger.info "checking if #{my_image_file} already exists"
   hash = Digest::MD5.file my_image_file
   result = images.include? hash
   if result
-    puts "it does already exist - moving the image"
-    filename = my_image_file.split("/").last
-    FileUtils.mv(my_image_file, duplicates + filename)
+    logger.info "image is a duplicate - moving it to " + duplicates
+    filename = File.basename(my_image_file)
+    newLocation = File.join(duplicates,filename)
+    FileUtils.mv(my_image_file, newLocation)
   else
-    puts "image is not a duplicate"
+    logger.info "image is not a duplicate - leaving it where it is "
   end
 end
