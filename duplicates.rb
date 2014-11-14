@@ -20,50 +20,46 @@ OptionParser.new do |opts|
     
 end.parse!
 
+unless options[:images]
+    logger.error "images folder must be provided"
+    exit
+end
+
+unless options[:duplicates]
+    logger.error "duplicates folder must be provided"
+    exit
+end
+
 if options[:check]
-    # load contents of imagesDir into an array
+    # load contents of images into an array
     Dir.glob(File.join(options[:images],"/**/*.jpg")) do |image_file|
         logger.info "processing #{image_file}"
         hash = Digest::MD5.file image_file
         images << hash
     end
+end
     
-    # loop through images in imagesToCheck and check if they already exist
-    Dir.glob(File.join(options[:check],"/**/*.jpg")) do |image_file|
-        logger.info "checking if #{image_file} already exists"
-        hash = Digest::MD5.file image_file
-        result = images.include? hash
-        if result
-            logger.info "image is a duplicate - moving it to #{options[:duplicates]}"
-            filename = File.basename(image_file)
-            new_location = File.join(options[:duplicates],filename)
-            FileUtils.mv(image_file, new_location)
-        else
-            logger.info "image is not a duplicate - leaving it where it is"
-        end
-    end
-else
-    #looping through the directory of images
-    Dir.glob(File.join(options[:images],"/**/*.jpg")) do |image_file|
-        logger.info "processing #{image_file}"
+imagesDir = options[:check] ? options[:check] : options[:images]
+
+# loop through imagesDir
+Dir.glob(File.join(imagesDir,"/**/*.jpg")) do |image_file|
+    logger.info "checking #{image_file}"
+
+    #hash the image
+    hash = Digest::MD5.file image_file
     
-        #hash the image
-        hash = Digest::MD5.file image_file
-    
-        #check if it exists in the array already
-        result = images.include? hash
-        if result
-            # file is a duplicate, lets move it to the duplicates folder
-            logger.info "#{image_file} is a duplicate - moving it to #{options[:duplicates]}"
-            filename = File.basename(image_file)
-            new_location = File.join(options[:duplicates],filename)
-            FileUtils.mv(image_file, new_location)
-        else
+    #check if it exists in the array already
+    result = images.include? hash
+    if result
+        # file is a duplicate, lets move it to the duplicates folder
+        logger.info "#{image_file} is a duplicate - moving it to #{options[:duplicates]}"
+        filename = File.basename(image_file)
+        new_location = File.join(options[:duplicates],filename)
+        FileUtils.mv(image_file, new_location)
+    else
+        if not options[:check]
             # file is not a duplicate, lets add to it the array
             images << hash
         end
     end
 end
-
-
-
