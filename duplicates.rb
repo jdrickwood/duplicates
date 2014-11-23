@@ -8,6 +8,8 @@ require 'optparse'
 now = Time.now.strftime("%Y%m%d-%H%M")
 logger = Logger.new "output_#{now}.log"
 accepted_formats = [".jpg", ".JPG", ".png", ".PNG"]
+image_count = 0
+duplicate_count = 0
 
 images = []
 
@@ -47,6 +49,7 @@ imagesDir = options[:check] ? options[:check] : options[:images]
 # loop through imagesDir
 Dir.glob(File.join(imagesDir,"/**/*")) do |image_file|
     if accepted_formats.include? File.extname(image_file) # only process the file if file type is supported
+        image_count += 1
         logger.info "checking #{image_file}"
 
         #hash the image
@@ -60,6 +63,7 @@ Dir.glob(File.join(imagesDir,"/**/*")) do |image_file|
             filename = File.basename(image_file)
             new_location = File.join(options[:duplicates],filename)
             FileUtils.mv(image_file, new_location)
+            duplicate_count += 1
         else
             unless options[:check]
                 # file is not a duplicate, lets add to it the array
@@ -68,5 +72,9 @@ Dir.glob(File.join(imagesDir,"/**/*")) do |image_file|
         end
     end
 end
+
+logger.info "RESULTS: #{image_count} images have been processed. #{duplicate_count} were duplicates."
+puts "#{image_count} images have been processed. #{duplicate_count} were duplicates."
+
 
 exit
