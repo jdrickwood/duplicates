@@ -34,11 +34,10 @@ end
 if options[:check]
     # load contents of images into an array
     Dir.glob(File.join(options[:images],"/**/*")) do |image_file|
-        if accepted_formats.include? File.extname(image_file)
+        if accepted_formats.include? File.extname(image_file) # only process the file if file type is supported
             logger.info "processing #{image_file}"
             hash = Digest::MD5.file image_file
             images << hash
-    
         end
     end
 end
@@ -47,7 +46,7 @@ imagesDir = options[:check] ? options[:check] : options[:images]
 
 # loop through imagesDir
 Dir.glob(File.join(imagesDir,"/**/*")) do |image_file|
-    if accepted_formats.include? File.extname(image_file)
+    if accepted_formats.include? File.extname(image_file) # only process the file if file type is supported
         logger.info "checking #{image_file}"
 
         #hash the image
@@ -62,7 +61,7 @@ Dir.glob(File.join(imagesDir,"/**/*")) do |image_file|
             new_location = File.join(options[:duplicates],filename)
             FileUtils.mv(image_file, new_location)
         else
-            if not options[:check]
+            unless options[:check]
                 # file is not a duplicate, lets add to it the array
                 images << hash
             end
@@ -71,5 +70,3 @@ Dir.glob(File.join(imagesDir,"/**/*")) do |image_file|
 end
 
 exit
-
-logger.info "all done :)"
